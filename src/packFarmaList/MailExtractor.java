@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,13 +25,18 @@ import org.jsoup.nodes.Document;
 public class MailExtractor {
 
 	private static String mails = "";
+	private static boolean continuar = false;
+	private static List<String> emails = new LinkedList<String>();
 
 	public static String Extract(String url) {
 
 		try {
 			return extractContent(url);
 		} catch (Exception ex) {
-			return "";
+			return mails;
+		}
+		finally {
+			mails = "";
 		}
 		// String content = extractContent(url);
 		// showLinks(content);
@@ -49,7 +56,7 @@ public class MailExtractor {
 		String linea = br.readLine();
 		while (null != linea) {			
 			linea = br.readLine();
-			content = showLinks(linea);
+			content += showLinks(linea);
 		}
 		return content;
 	}
@@ -70,7 +77,7 @@ public class MailExtractor {
 			return mails;
 			
 		} catch (Exception ex) {
-			return "";
+			return mails;
 		}
 	}
 
@@ -86,20 +93,25 @@ public class MailExtractor {
 					System.out.println("EMAIL ENCONTRADO: " + mail);
 					System.out.println(" ******************************** ");
 					System.out.println(" ******************************** ");
-					mails = mail.concat(";");
+					mails += mail.concat(";");
 				}
 			}
 			return mails;
 
 		} catch (Exception ex) {
-			return "";
+			return mails;
 		}
-
-		// Set<String> links = new HashSet<String>();
-		/*
-		 * Elements elements = doc.select("a[href]"); for (Element e : elements) {
-		 * //links.add(e.attr("href")); System.out.println(e.attr("href")); }
-		 */
 	}
-
+	
+	public static boolean getContinuar() {
+		return continuar;
+	}
+	
+	private static void addEmail(String mail) {
+		emails.add(mail);
+	}
+	
+	public static void removeEmail() {
+		emails.remove(0);
+	}
 }

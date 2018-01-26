@@ -14,7 +14,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class FarmaList {
+public class FarmaList implements Runnable {
 	
 	private static boolean continuar;
 	private static int contador;
@@ -145,12 +145,18 @@ public class FarmaList {
 				System.out.println("-------------------------------------------------------");
 				System.out.println(name + ";" + phone1 + ";" + phone2 + ";"+ streetAddress + ";" 
 				                        + postalCode + ";" + addressLocality + ";" + addressState 
-				                        + ";" + webUrl + " \r\n");
+				                        + ";" + webUrl + ";" + emails + " \r\n");
 				System.out.println("-------------------------------------------------------");
 				System.out.println("Registros tratados:" + total++);
 
 			}
 		}
 		in.close();
+	}
+	
+	@Override
+	public void run() {
+		
+		
 	}
 }
