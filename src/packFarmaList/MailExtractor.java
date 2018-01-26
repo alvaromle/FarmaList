@@ -87,7 +87,7 @@ public class MailExtractor {
 			Matcher matcher = p.matcher(doc.text());
 			while (matcher.find()) {
 				String mail = matcher.group();
-				if (!mail.isEmpty()) {
+				if (!mail.isEmpty() && !mail.contains(".css") && !mail.contains(".jpg") && !mails.contains("mail")) {
 					System.out.println(" ******************************** ");
 					System.out.println(" ******************************** ");
 					System.out.println("EMAIL ENCONTRADO: " + mail);
