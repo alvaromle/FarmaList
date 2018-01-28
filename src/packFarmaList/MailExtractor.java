@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,26 +15,17 @@ import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-/**
- * Extrae los links de una url de internet. Abre la URL, carga el contenido en
- * un String y por medio de una expresion regular busca los href="enlace"
- * 
- * @author Chuidiang
- * 
- */
 public class MailExtractor {
 
-	private static StringBuilder mails;
+	private static StringBuilder emails;
 	private static List<String> mailList = new LinkedList<String>();
 
 	public static String Extract(String url) {
-
 		try {
-			mails = new StringBuilder();
-			mailList.clear();;
+			emails = new StringBuilder();
 			return extractContent(url);
 		} catch (Exception ex) {
-			return mails.toString();
+			return emails.toString();
 		}
 	}
 
@@ -87,22 +77,22 @@ public class MailExtractor {
 			while (matcher.find()) {
 				String mail = matcher.group();
 				if (!mail.isEmpty() && ( !mail.contains("css") || !mail.contains("jpg") || !mail.contains("png") )) {
-					System.out.println(" ******************************** ");
-					System.out.println(" ******************************** ");
-					System.out.println("EMAIL ENCONTRADO: " + mail);
-					System.out.println(" ******************************** ");
-					System.out.println(" ******************************** ");
 					
 					if (!findMail(mail)) {
-						mails.append(mail).append(";");
+						System.out.println(" ******************************** ");
+						System.out.println(" ******************************** ");
+						System.out.println("EMAIL ENCONTRADO: " + mail);
+						System.out.println(" ******************************** ");
+						System.out.println(" ******************************** ");
+						emails.append(mail).append(";");
 						addMail(mail);
 					}					
 				}
 			}
-			return mails.toString();
+			return emails.toString();
 
 		} catch (Exception ex) {
-			return mails.toString();
+			return emails.toString();
 		}
 	}
 	
@@ -111,6 +101,6 @@ public class MailExtractor {
 	}
 
 	private static boolean findMail (String targetValue) {
-		return mailList.contains(targetValue);		
+		return emails.toString().contains(targetValue);	
 	}
 }
