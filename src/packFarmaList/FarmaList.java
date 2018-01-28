@@ -14,31 +14,26 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class FarmaList implements Runnable {
-	
+public class FarmaList {
+
 	private static boolean continuar;
 	private static int contador;
-	
-	private static int total;
 
-	private static File fichero;
+	private static int total;
 	private static BufferedWriter bw;
 
 	public static void main(String[] args) throws Exception {
-		
+
 		String linea = "";
-		
 		String path = "./src/UrlProvincias";
-		fichero = new File(path);
+		File fichero = new File(path);
 		BufferedReader br = new BufferedReader(new FileReader(fichero));
-		
-		//int hashkey = 0;
 		total = 0;
-		
+
 		while ((linea = br.readLine()) != null) {
-			String pathFichero = "/Users/alvaro/Desktop/Provincias/Espana.csv"; //.concat(farmacia.getFileName(hashkey));
+			String pathFichero = "/Users/alvaro/Desktop/Provincias/Madrid.csv";
 			bw = new BufferedWriter(new FileWriter(pathFichero));
-			
+
 			continuar = true;
 			contador = 1;
 			while (continuar) {
@@ -49,12 +44,13 @@ public class FarmaList implements Runnable {
 				} catch (Exception ex) {
 					continuar = false;
 				}
-			} 
-			//hashkey += 1;
+			}
+			// hashkey += 1;
+			br.close();
 			bw.close();
-		}	
+		}
 	}
-	
+
 	private static void getFarmaciasURL(URL url) throws Exception {
 
 		URLConnection uc = url.openConnection();
@@ -87,14 +83,14 @@ public class FarmaList implements Runnable {
 			in.close();
 		}
 	}
-	
+
 	private static void getInfoFarmacias(URL url) throws Exception {
 
 		URLConnection uc = url.openConnection();
 
 		BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
 		String inputLine;
-		
+
 		String name = "";
 		String phone1 = "";
 		String phone2 = "";
@@ -103,9 +99,10 @@ public class FarmaList implements Runnable {
 		String addressLocality = "";
 		String addressState = "";
 		String webUrl = "";
-		
 		String emails = "";
-		
+
+		StringBuilder sb;
+
 		while ((inputLine = in.readLine()) != null) {
 			String html = inputLine;
 			Document doc = Jsoup.parse(html);
@@ -113,50 +110,52 @@ public class FarmaList implements Runnable {
 			Elements cabeceras = entradas.select("div.col-xs-6.col-md-7");
 
 			for (Element e : cabeceras) {
-				Elements titular = e.select("div.titular");
-				Elements telefono = e.select("div.telefono");
-				Elements address = e.select("div.bip-links");  
-				Elements adress = e.select("div.adress > a");
-				
-				name = titular.select("h1[itemprop=name]").text().replace(';', '-');
-				webUrl = adress.attr("href");
-				phone1 = telefono.select("span[itemprop=telephone]").text();
-				
-				if (phone1.trim().length() > 9 ) {
+				name = e.select("div.titular").select("h1[itemprop=name]").text().replace(';', '-');
+				webUrl = e.select("div.adress > a").attr("href");
+				phone1 = e.select("div.telefono").select("span[itemprop=telephone]").text();
+
+				if (phone1.trim().length() > 9) {
 					String aux = phone1.substring(0, 9);
 					phone2 = phone1.substring(10, phone1.length());
 					phone1 = aux;
-				}					
+				}
+
+				// @formatter:off
+				streetAddress = e.select("div.bip-links").select("span[itemprop=streetAddress]").text().replace(';','-');
+				postalCode = e.select("div.bip-links").select("span[itemprop=postalCode]").text().replace(';', '-');
+				addressLocality = e.select("div.bip-links").select("span[itemprop=addressLocality]").text().replace(';','-');
+				addressState = e.select("div.bip-links").select("span[itemprop=addressState]").text().replace(';', '-');
+				// @formatter:on
+
+				sb = new StringBuilder();
+				sb.append(name).append(";").append("phone1").append(phone2).append(";").append(streetAddress)
+						.append(";").append(postalCode).append(";").append(addressLocality).append(";")
+						.append(addressState).append(";").append(webUrl)
+						.append(";");
+
+				// @formatter:off
+				if (!webUrl.isEmpty() && ( !webUrl.contains("facebook") || !webUrl.contains("twitter") || !webUrl.contains("instagram") )) {
+					emails = MailExtractor.Extract(webUrl);
+					sb.append(emails).append(";");
+				}
+				// @formatter:off
 				
-				streetAddress = address.select("span[itemprop=streetAddress]").text().replace(';', '-');
-				postalCode = address.select("span[itemprop=postalCode]").text();
-				addressLocality = address.select("span[itemprop=addressLocality]").text().replace(';', '-');
-				addressState = address.select("span[itemprop=addressState]").text().replace(';', '-');
-				
-				
-				if (!webUrl.isEmpty())
-					emails = MailExtractor.Extract(webUrl);							
-				
-				bw.write(name + ";" + phone1 + ";" + phone2 + "; "+ streetAddress + ";" + postalCode + ";" 
-						      + addressLocality + ";" + addressState + ";" + webUrl + ";" 
-						      +  emails + ";\r\n" );
-				
+				sb.append("\r\n");
+
+				/*
+				bw.write(name + ";" + phone1 + ";" + phone2 + "; " + streetAddress + ";" + postalCode + ";"
+						+ addressLocality + ";" + addressState + ";" + webUrl + ";" + emails + ";\r\n");
+				*/
+				bw.write(sb.toString());
+				bw.flush();
+
 				System.out.println("Escribiendo datos en fichero: ");
 				System.out.println("-------------------------------------------------------");
-				System.out.println(name + ";" + phone1 + ";" + phone2 + ";"+ streetAddress + ";" 
-				                        + postalCode + ";" + addressLocality + ";" + addressState 
-				                        + ";" + webUrl + ";" + emails + " \r\n");
+				System.out.println(sb.toString());
 				System.out.println("-------------------------------------------------------");
 				System.out.println("Registros tratados:" + total++);
-
 			}
 		}
 		in.close();
-	}
-	
-	@Override
-	public void run() {
-		
-		
 	}
 }

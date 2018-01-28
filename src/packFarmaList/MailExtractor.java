@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,27 +25,18 @@ import org.jsoup.nodes.Document;
  */
 public class MailExtractor {
 
-	private static String mails = "";
-	private static boolean continuar = false;
-	private static List<String> emails = new LinkedList<String>();
+	private static StringBuilder mails;
+	private static List<String> mailList = new LinkedList<String>();
 
 	public static String Extract(String url) {
 
 		try {
+			mails = new StringBuilder();
+			mailList.clear();;
 			return extractContent(url);
 		} catch (Exception ex) {
-			return mails;
+			return mails.toString();
 		}
-		finally {
-			mails = "";
-		}
-		// String content = extractContent(url);
-		// showLinks(content);
-		/*
-		 * try { Document doc = Jsoup.connect(url).get(); return extract(doc);
-		 * 
-		 * } catch (Exception ex) { return ""; }
-		 */
 	}
 
 	private static String extractContent(String urlString) throws MalformedURLException, IOException {
@@ -54,7 +46,7 @@ public class MailExtractor {
 		InputStream is = urlConnection.getInputStream();
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 		String linea = br.readLine();
-		while (null != linea) {			
+		while (null != linea) {
 			linea = br.readLine();
 			content += showLinks(linea);
 		}
@@ -68,14 +60,21 @@ public class MailExtractor {
 			Matcher matcher = pattern.matcher(content);
 			while (matcher.find()) {
 				System.out.println("Extrayendo datos de: " + matcher.group(1));
-				if (!matcher.group(1).contains("facebook")) {
+				if (!matcher.group(1).contains("facebook") || !matcher.group(1).contains("twitter") 
+						                                   || !matcher.group(1).contains("instagram")
+						                                   || !matcher.group(1).contains(".ico")
+						                                   || !matcher.group(1).contains(".css")
+						                                   || !matcher.group(1).contains(".png")
+						                                   || !matcher.group(1).contains(".google")
+						                                   || !matcher.group(1).contains(".opera")
+						                                   || !matcher.group(1).contains(".mozilla")) {
 					Document doc = Jsoup.connect(matcher.group(1)).get();
-					mails = extract(doc);	
+					mails = extract(doc);
 				}
 			}
-			
+
 			return mails;
-			
+
 		} catch (Exception ex) {
 			return mails;
 		}
@@ -87,31 +86,31 @@ public class MailExtractor {
 			Matcher matcher = p.matcher(doc.text());
 			while (matcher.find()) {
 				String mail = matcher.group();
-				if (!mail.isEmpty() && !mail.contains(".css") && !mail.contains(".jpg") && !mails.contains("mail")) {
+				if (!mail.isEmpty() && ( !mail.contains("css") || !mail.contains("jpg") || !mail.contains("png") )) {
 					System.out.println(" ******************************** ");
 					System.out.println(" ******************************** ");
 					System.out.println("EMAIL ENCONTRADO: " + mail);
 					System.out.println(" ******************************** ");
 					System.out.println(" ******************************** ");
-					mails += mail.concat(";");
+					
+					if (!findMail(mail)) {
+						mails.append(mail).append(";");
+						addMail(mail);
+					}					
 				}
 			}
-			return mails;
+			return mails.toString();
 
 		} catch (Exception ex) {
-			return mails;
+			return mails.toString();
 		}
 	}
 	
-	public static boolean getContinuar() {
-		return continuar;
+	private static void addMail (String mail) {
+		mailList.add(mail);
 	}
-	
-	private static void addEmail(String mail) {
-		emails.add(mail);
-	}
-	
-	public static void removeEmail() {
-		emails.remove(0);
+
+	private static boolean findMail (String targetValue) {
+		return mailList.contains(targetValue);		
 	}
 }
