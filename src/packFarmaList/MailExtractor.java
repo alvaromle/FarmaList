@@ -9,6 +9,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,10 +23,11 @@ public class MailExtractor {
 	private static StringBuilder emails;
 	private static List<String> mailList;
 
-	public static String Extract(String url) {
+	public static String Extract(String url) {		
 		try {
 			emails = new StringBuilder();
 			mailList = new LinkedList<String>();
+			
 			return extractContent(url);
 		} catch (Exception ex) {
 			return emails.toString();
@@ -51,6 +55,9 @@ public class MailExtractor {
 			Matcher matcher = pattern.matcher(content);
 			while (matcher.find()) {
 				System.out.println("Extrayendo datos de: " + matcher.group(1));
+				mails = isMail(matcher.group(1));
+				
+				
 				if (!matcher.group(1).contains("facebook") || !matcher.group(1).contains("twitter") 
 						                                   || !matcher.group(1).contains("instagram")
 						                                   || !matcher.group(1).contains(".ico")
@@ -59,7 +66,7 @@ public class MailExtractor {
 						                                   || !matcher.group(1).contains(".google")
 						                                   || !matcher.group(1).contains(".opera")
 						                                   || !matcher.group(1).contains(".mozilla")) {
-					Document doc = Jsoup.connect(matcher.group(1)).get();
+					Document doc = Jsoup.connect(matcher.group(1)).get();					
 					mails = extractMail(doc);
 				}
 			}
@@ -69,6 +76,32 @@ public class MailExtractor {
 		} catch (Exception ex) {
 			return mails;
 		}
+	}
+	
+	private static String isMail (String text) {
+		try {
+			StringBuilder sb = new StringBuilder();
+			Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
+			Matcher matcher = p.matcher(new URL(text).getPath());
+			
+			if (matcher.find() && !findMail(text)) {
+				System.out.println(" ******************************** ");
+				System.out.println(" ******************************** ");
+				System.out.println("NUEVO EMAIL ENCONTRADO: " + matcher.group(0));
+				System.out.println(" ******************************** ");
+				System.out.println(" ******************************** ");
+				sb.append(matcher.group(0)).append(";");
+				addMail(matcher.group(0));
+			}
+			
+			return sb.toString();
+			
+		} catch (Exception ex) {
+			return "";
+		}
+		
+		
+		
 	}
 
 	private static String extractMail(Document doc) {
@@ -84,7 +117,7 @@ public class MailExtractor {
 					if (!findMail(mail)) {
 						System.out.println(" ******************************** ");
 						System.out.println(" ******************************** ");
-						System.out.println("EMAIL ENCONTRADO: " + mail);
+						System.out.println("NUEVO EMAIL ENCONTRADO: " + mail);
 						System.out.println(" ******************************** ");
 						System.out.println(" ******************************** ");
 						sb.append(mail).append(";");
@@ -98,15 +131,7 @@ public class MailExtractor {
 			return emails.toString();
 		}
 	}
-	
-	public static void initStringBuilder() {
-		emails = new StringBuilder();
-	}
-	
-	public static void initLinkedList() {
-		mailList.clear();
-	}
-	
+
 	private static void addMail (String mail) {
 		mailList.add(mail);
 	}

@@ -45,7 +45,6 @@ public class FarmaList {
 					continuar = false;
 				}
 			}
-			// hashkey += 1;
 			br.close();
 			bw.close();
 		}
@@ -128,13 +127,10 @@ public class FarmaList {
 				// @formatter:on
 
 				sb = new StringBuilder();
-				sb.append(name).append(";").append("phone1").append(phone2).append(";").append(streetAddress)
+				sb.append(name).append(";").append(phone1).append(phone2).append(";").append(streetAddress)
 						.append(";").append(postalCode).append(";").append(addressLocality).append(";")
 						.append(addressState).append(";").append(webUrl)
 						.append(";");
-				
-				MailExtractor.initStringBuilder();
-				MailExtractor.initLinkedList();
 
 				// @formatter:off
 				if (!webUrl.isEmpty() && ( !webUrl.contains("facebook") || !webUrl.contains("twitter") || !webUrl.contains("instagram") )) {
