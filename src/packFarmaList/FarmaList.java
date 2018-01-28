@@ -132,6 +132,9 @@ public class FarmaList {
 						.append(";").append(postalCode).append(";").append(addressLocality).append(";")
 						.append(addressState).append(";").append(webUrl)
 						.append(";");
+				
+				MailExtractor.initStringBuilder();
+				MailExtractor.initLinkedList();
 
 				// @formatter:off
 				if (!webUrl.isEmpty() && ( !webUrl.contains("facebook") || !webUrl.contains("twitter") || !webUrl.contains("instagram") )) {
@@ -142,10 +145,6 @@ public class FarmaList {
 				
 				sb.append("\r\n");
 
-				/*
-				bw.write(name + ";" + phone1 + ";" + phone2 + "; " + streetAddress + ";" + postalCode + ";"
-						+ addressLocality + ";" + addressState + ";" + webUrl + ";" + emails + ";\r\n");
-				*/
 				bw.write(sb.toString());
 				bw.flush();
 

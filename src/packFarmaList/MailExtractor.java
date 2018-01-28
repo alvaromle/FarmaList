@@ -18,11 +18,12 @@ import org.jsoup.nodes.Document;
 public class MailExtractor {
 
 	private static StringBuilder emails;
-	private static List<String> mailList = new LinkedList<String>();
+	private static List<String> mailList;
 
 	public static String Extract(String url) {
 		try {
 			emails = new StringBuilder();
+			mailList = new LinkedList<String>();
 			return extractContent(url);
 		} catch (Exception ex) {
 			return emails.toString();
@@ -59,7 +60,7 @@ public class MailExtractor {
 						                                   || !matcher.group(1).contains(".opera")
 						                                   || !matcher.group(1).contains(".mozilla")) {
 					Document doc = Jsoup.connect(matcher.group(1)).get();
-					mails = extract(doc);
+					mails = extractMail(doc);
 				}
 			}
 
@@ -70,13 +71,15 @@ public class MailExtractor {
 		}
 	}
 
-	private static String extract(Document doc) {
+	private static String extractMail(Document doc) {
 		try {
+			StringBuilder sb = new StringBuilder();
 			Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
 			Matcher matcher = p.matcher(doc.text());
 			while (matcher.find()) {
 				String mail = matcher.group();
-				if (!mail.isEmpty() && ( !mail.contains("css") || !mail.contains("jpg") || !mail.contains("png") )) {
+				if (!mail.isEmpty() && 
+						( !mail.contains("css") || !mail.contains("jpg") || !mail.contains("png")  || !mail.contains("jpeg")  )) {
 					
 					if (!findMail(mail)) {
 						System.out.println(" ******************************** ");
@@ -84,16 +87,24 @@ public class MailExtractor {
 						System.out.println("EMAIL ENCONTRADO: " + mail);
 						System.out.println(" ******************************** ");
 						System.out.println(" ******************************** ");
-						emails.append(mail).append(";");
+						sb.append(mail).append(";");
 						addMail(mail);
 					}					
 				}
 			}
-			return emails.toString();
+			return sb.toString();
 
 		} catch (Exception ex) {
 			return emails.toString();
 		}
+	}
+	
+	public static void initStringBuilder() {
+		emails = new StringBuilder();
+	}
+	
+	public static void initLinkedList() {
+		mailList.clear();
 	}
 	
 	private static void addMail (String mail) {
@@ -101,6 +112,6 @@ public class MailExtractor {
 	}
 
 	private static boolean findMail (String targetValue) {
-		return emails.toString().contains(targetValue);	
+		return mailList.contains(targetValue);
 	}
 }
