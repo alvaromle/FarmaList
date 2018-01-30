@@ -31,7 +31,7 @@ public class FarmaList {
 		total = 0;
 
 		while ((linea = br.readLine()) != null) {
-			String pathFichero = "/Users/alvaro/Desktop/Provincias/Madrid.csv";
+			String pathFichero = "/Users/alvaro/Desktop/Provincias/Alava.csv";
 			bw = new BufferedWriter(new FileWriter(pathFichero));
 
 			continuar = true;
@@ -121,9 +121,9 @@ public class FarmaList {
 
 				// @formatter:off
 				streetAddress = e.select("div.bip-links").select("span[itemprop=streetAddress]").text().replace(';','-');
-				postalCode = e.select("div.bip-links").select("span[itemprop=postalCode]").text().replace(';', '-');
+				postalCode = e.select("div.bip-links").select("span[itemprop=postalCode]").text();
 				addressLocality = e.select("div.bip-links").select("span[itemprop=addressLocality]").text().replace(';','-');
-				addressState = e.select("div.bip-links").select("span[itemprop=addressState]").text().replace(';', '-');
+				addressState = e.select("div.bip-links").select("span[class=addressState]").text().replace(';', '-');
 				// @formatter:on
 
 				sb = new StringBuilder();
@@ -134,7 +134,7 @@ public class FarmaList {
 
 				// @formatter:off
 				if (!webUrl.isEmpty() && ( !webUrl.contains("facebook") || !webUrl.contains("twitter") || !webUrl.contains("instagram") )) {
-					emails = MailExtractor.Extract(webUrl);
+					emails = Extractor.Extract(webUrl);
 					sb.append(emails).append(";");
 				}
 				// @formatter:off
