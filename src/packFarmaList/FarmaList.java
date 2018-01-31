@@ -18,6 +18,8 @@ public class FarmaList {
 
 	private static boolean continuar;
 	private static int contador;
+	
+	private static final String destino = "/Users/alvaro/Desktop/Provincias/Madrid.csv";
 
 	private static int total;
 	private static BufferedWriter bw;
@@ -25,14 +27,12 @@ public class FarmaList {
 	public static void main(String[] args) throws Exception {
 
 		String linea = "";
-		String path = "./src/UrlProvincias";
-		File fichero = new File(path);
+		File fichero = new File("./src/UrlProvincias");
 		BufferedReader br = new BufferedReader(new FileReader(fichero));
-		total = 0;
+		total = 1;
 
 		while ((linea = br.readLine()) != null) {
-			String pathFichero = "/Users/alvaro/Desktop/Provincias/Alava.csv";
-			bw = new BufferedWriter(new FileWriter(pathFichero));
+			bw = new BufferedWriter(new FileWriter(destino));
 
 			continuar = true;
 			contador = 1;
@@ -45,7 +45,6 @@ public class FarmaList {
 					continuar = false;
 				}
 			}
-			br.close();
 			bw.close();
 		}
 	}
@@ -132,23 +131,22 @@ public class FarmaList {
 						.append(addressState).append(";").append(webUrl)
 						.append(";");
 
-				// @formatter:off
-				if (!webUrl.isEmpty() && ( !webUrl.contains("facebook") || !webUrl.contains("twitter") || !webUrl.contains("instagram") )) {
+				if (!webUrl.isEmpty()) {
 					emails = Extractor.Extract(webUrl);
-					sb.append(emails).append(";");
+					sb.append(emails);
 				}
-				// @formatter:off
 				
 				sb.append("\r\n");
 
 				bw.write(sb.toString());
 				bw.flush();
-
+				
 				System.out.println("Escribiendo datos en fichero: ");
 				System.out.println("-------------------------------------------------------");
 				System.out.println(sb.toString());
 				System.out.println("-------------------------------------------------------");
 				System.out.println("Registros tratados:" + total++);
+				System.out.println();
 			}
 		}
 		in.close();

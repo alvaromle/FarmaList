@@ -22,151 +22,84 @@ import org.jsoup.select.Elements;
  */
 
 public class Extractor {
-
+	
 	private static StringBuilder sb = new StringBuilder();
-	private static List<String> mailList = new LinkedList<String>();
 	private static String url = "";
 
 	@SuppressWarnings("finally")
-	static String Extract(String url) {
+	public static String Extract(String url) {
 		try {
-			sb.delete(0, sb.length());
-			mailList.clear();
-			Extractor.url = url;
-			// ***** FILTRO 1
-			Filtro1(url);
-			extractContent(url);
 
+			sb.delete(0, sb.length());
+			Document doc = Jsoup.connect(url).get();
+			Elements links = doc.select("a[href]");
+			// 1. Busco emails en el primer enlace.
+			getMails(doc.text());
+			
+			// 2. Por cada href encontrado busco emails.
+			links.forEach((link) -> {
+				isMail(link.attr("abs:href").trim());
+				System.out.println("Evaluando ... : " + link.attr("abs:href").trim());
+				getMails(link.attr("abs:href").trim());
+			});
+			/*
+			for (Element link: links) {
+				print("Evaluando ... : " + link.attr("abs:href").trim());
+				getMails(link.attr("abs:href").trim());
+			}
+			*/
 		} catch (Exception ex) {
 			/* Ya veremos que devolvemos */
 		} finally {
-			mailList.forEach((mail) -> {
-				sb.append(mail).append(";");
-			});
+			//mailList.forEach((mail) -> {
+			//	sb.append(mail).append(";");
+			//});
 			return sb.toString();
 		}
-
 	}
-
-	static void Filtro1(String url) {
-		try {
-			Document doc = Jsoup.connect(url).get();
-			isMail(doc.text());
-
-			Elements elements = doc.select("a[href]");
-			String mail = "";
-			for (Element e : elements) {
-				try {
-					mail = e.attr("href");
-					extractMail(Jsoup.connect(mail).get());
-
-				} catch (Exception ex) {
-					//String full = mail.startsWith("/") ? url.concat(mail) : url.concat("/"+mail);
-					//System.out.println("URL FULL: " + full);
-					//extractMail(Jsoup.connect(full).get());
-				}
-				//showLinks(url.concat(mail));
-				//isMail(mail);
-			}		
-
-		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
-		}
-	}
-
-	static void extractContent(String urlString) {
-		try {
-			URL url = new URL(urlString);
-			URLConnection urlConnection = url.openConnection();
-			InputStream is = urlConnection.getInputStream();
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			String linea = br.readLine();
-			System.out.println("Linea: " + linea);
-			while (null != linea) {
-				linea = br.readLine();
-				System.out.println("Evaluando linea: " + linea);
-				showLinks(linea); 
-			}
-
-		} catch (MalformedURLException ex) {
-			System.out.println(ex.getMessage());
-		} catch (IOException ex) {
-			System.out.println(ex.getMessage());
-		}
-	}
-
-	static void showLinks(String content) {
-
-		try {			
-			Pattern pattern = Pattern.compile("(?i)HREF\\s*=\\s*\"(.*?)\"");
-			Matcher matcher = pattern.matcher(content);			
-			while (matcher.find()) {
-				String result = matcher.group(1);
-				System.out.println("Evaluando: " + result);
-				isMail(result);
-				if (isValidHRef(result)) {
-					Filtro1(result);
-					System.out.println("Extrayendo datos de: " + result);
-					Document doc = Jsoup.connect(result).get();
-					extractMail(doc);
-				}
-			}
-
-		} catch (MalformedURLException ex) {
-			System.out.println(ex.getMessage());
-		} catch (IOException ex) {
-			System.out.println(ex.getMessage());
-		}
-	}
-
-	static void extractMail(Document doc) {
-		try {
-			isMail(doc.text());
-		} catch (Exception ex) {
-			/* Ya veremos que devolvemos */
-		}
-	}
-
-	static void isMail(String text) {
+	
+	/*
+	 * A veces me llega el email por el href.
+	 */
+	private static void isMail(String text) {
 		try {
 			Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
-			//Matcher matcher = p.matcher(new URL(text).getPath());
-			Matcher matcher = p.matcher(text);
+			Matcher matcher = p.matcher(new URL(text).getPath());
+			if (matcher.find()) 
+				addMail(matcher.group(0));
+			
+		} catch (Exception ex) {
+			
+		}
+	}
 
-			while (matcher.find()) {
-				String mail = matcher.group();
-				if (isValidEmail(mail))
-					addMail(mail);
-			}
+	private static void getMails(String text) {
+		try {
+			
+			Document doc = Jsoup.connect(text).get();
+			Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
+			Matcher matcher = p.matcher(doc.text());
+
+			while (matcher.find())
+				addMail(matcher.group());
+
 		} catch (Exception ex) {
 			/* Ya veremos que devolvemos */
 		}
 	}
-
-	static void addMail(String targetValue) {
-		if (!mailList.contains(targetValue)) {
-			System.out.println(" ******************************** ");
-			System.out.println(" ******************************** ");
-			System.out.println("NUEVO EMAIL ENCONTRADO: " + targetValue);
-			System.out.println(" ******************************** ");
-			System.out.println(" ******************************** ");
-			mailList.add(targetValue);
+	
+	private static void addMail(String targetValue) {
+		if (!sb.toString().contains(targetValue)) {
+			print(" ******************************** ");
+			print(" ******************************** ");
+			print("NUEVO EMAIL ENCONTRADO: " + targetValue);
+			print(" ******************************** ");
+			print(" ******************************** ");
+			sb.append(targetValue).append(";");
 		}
 	}
-
-	static boolean findMail(String targetValue) {
-		return mailList.contains(targetValue);
+	
+	private static void print(String msg, Object... args) {
+		System.out.println(String.format(msg, args));
 	}
-
-	static boolean isValidEmail(String mail) {
-		return (!mail.isEmpty() && (!mail.contains("css") || !mail.contains("jpg") || !mail.contains("png")
-				|| !mail.contains("jpg") || !mail.contains("jpeg")));
-	}
-
-	static boolean isValidHRef(String href) {
-		return !href.contains("facebook") && !href.contains("twitter") && !href.contains("instagram")
-				&& !href.contains("ico") && !href.contains("css") && !href.contains("png") && !href.contains("google")
-				&& !href.contains("opera") && !href.contains("mozilla");
-	}
-
 }
