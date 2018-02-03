@@ -1,20 +1,13 @@
 package packFarmaList;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 /*
@@ -23,37 +16,38 @@ import org.jsoup.select.Elements;
 
 public class Extractor {
 	
+	private static Map<String, String> map = new HashMap<String, String>();
 	private static StringBuilder sb = new StringBuilder();
-	private static String url = "";
+	
+	private static int index = 0;
 
 	@SuppressWarnings("finally")
 	public static String Extract(String url) {
 		try {
 
+			map.clear();
 			sb.delete(0, sb.length());
+			index = 0;
 			Document doc = Jsoup.connect(url).get();
 			Elements links = doc.select("a[href]");
 			// 1. Busco emails en el primer enlace.
 			getMails(doc.text());
-			
+		
 			// 2. Por cada href encontrado busco emails.
 			links.forEach((link) -> {
-				isMail(link.attr("abs:href").trim());
-				System.out.println("Evaluando ... : " + link.attr("abs:href").trim());
-				getMails(link.attr("abs:href").trim());
+				map.put(link.attr("abs:href").trim(), link.attr("abs:href").trim());
 			});
-			/*
-			for (Element link: links) {
-				print("Evaluando ... : " + link.attr("abs:href").trim());
-				getMails(link.attr("abs:href").trim());
-			}
-			*/
+			
+			map.forEach((key, value) -> {
+				index += 1;
+				isMail(key);
+				System.out.println("Evaluando ... " + index + " de " + map.size() + ": " +  key);
+				getMails(key);
+			});
+			
 		} catch (Exception ex) {
 			/* Ya veremos que devolvemos */
 		} finally {
-			//mailList.forEach((mail) -> {
-			//	sb.append(mail).append(";");
-			//});
 			return sb.toString();
 		}
 	}
@@ -63,7 +57,8 @@ public class Extractor {
 	 */
 	private static void isMail(String text) {
 		try {
-			Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
+			//Pattern p = Pattern.compile("\\b[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+\\b");
+			Pattern p = Pattern.compile("^[_A-Za-z0-9-\\\\+]+(\\\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\\\.[A-Za-z0-9]+)*(\\\\.[A-Za-z]{2,})$;");
 			Matcher matcher = p.matcher(new URL(text).getPath());
 			if (matcher.find()) 
 				addMail(matcher.group(0));
@@ -90,6 +85,7 @@ public class Extractor {
 	
 	private static void addMail(String targetValue) {
 		if (!sb.toString().contains(targetValue)) {
+			System.out.println();
 			print(" ******************************** ");
 			print(" ******************************** ");
 			print("NUEVO EMAIL ENCONTRADO: " + targetValue);

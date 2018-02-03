@@ -18,8 +18,8 @@ public class FarmaList {
 
 	private static boolean continuar;
 	private static int contador;
-	
-	private static final String destino = "/Users/alvaro/Desktop/Provincias/Madrid.csv";
+
+	private static final String destino = "/Users/alvaro/Desktop/Provincias/Alicante.csv";
 
 	private static int total;
 	private static BufferedWriter bw;
@@ -126,21 +126,20 @@ public class FarmaList {
 				// @formatter:on
 
 				sb = new StringBuilder();
-				sb.append(name).append(";").append(phone1).append(phone2).append(";").append(streetAddress)
+				sb.append(name).append(";").append(phone1).append(";").append(phone2).append(";").append(streetAddress)
 						.append(";").append(postalCode).append(";").append(addressLocality).append(";")
-						.append(addressState).append(";").append(webUrl)
-						.append(";");
+						.append(addressState).append(";").append(webUrl).append(";");
 
 				if (!webUrl.isEmpty()) {
 					emails = Extractor.Extract(webUrl);
 					sb.append(emails);
 				}
-				
+
 				sb.append("\r\n");
 
 				bw.write(sb.toString());
 				bw.flush();
-				
+
 				System.out.println("Escribiendo datos en fichero: ");
 				System.out.println("-------------------------------------------------------");
 				System.out.println(sb.toString());
