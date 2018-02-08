@@ -17,15 +17,17 @@ import org.jsoup.select.Elements;
 public class FarmaList {
 
 	private static boolean continuar;
-	private static int contador;
+	private static String resultados;
+	private static int index;
 
-	private static final String destino = "/Users/alvaro/Desktop/Provincias/Alicante.csv";
+	private static final String destino = "/Users/alvaro/Desktop/Provincias/Badajoz.csv";
 
 	private static int total;
 	private static BufferedWriter bw;
 
 	public static void main(String[] args) throws Exception {
 
+		int contador;
 		String linea = "";
 		File fichero = new File("./src/UrlProvincias");
 		BufferedReader br = new BufferedReader(new FileReader(fichero));
@@ -39,7 +41,8 @@ public class FarmaList {
 			while (continuar) {
 				try {
 					String url = linea.concat(String.valueOf(contador));
-					getFarmaciasURL(new URL(url));
+					//getFarmaciasURL(new URL(url));
+					getFarmaciasURL(url);
 					contador++;
 				} catch (Exception ex) {
 					continuar = false;
@@ -48,6 +51,72 @@ public class FarmaList {
 			bw.close();
 		}
 	}
+	
+	
+	private static void getFarmaciasURL(String url) throws Exception {
+
+		Document doc = Jsoup.connect(url).get();
+		FarmaList.resultados = doc.select("div.central").select("span[class=h1]").text();
+		Elements row = doc.select("div.listado-item").select("div.box").select("div.row");
+		
+		row.forEach((e -> {
+			String path = e.select("div.envio-consulta > a").attr("href");
+			if (!path.isEmpty()) {
+				index++;
+				try {
+					extractInfo(path);
+				} catch (Exception e1) {					
+					e1.printStackTrace();
+				}
+			}
+		}));
+	}
+	
+	private static void extractInfo(String url) throws Exception {
+		
+		Document doc = Jsoup.connect(url).get();
+		Elements registros = doc.select("div.basicInfo").select("div.col-xs-6.col-md-7");
+		
+		registros.forEach((e) -> {
+			String name = e.select("div.titular").select("h1[itemprop=name]").text().replace(';', '-');
+			String webUrl = e.select("div.adress > a").attr("href");
+			String phone1 = e.select("div.telefono").select("span[itemprop=telephone]").text();
+			String phone2 = "";
+			
+			if (phone1.trim().length() > 9) {
+				String aux = phone1.substring(0, 9);
+				phone2 = phone1.substring(10, phone1.length());
+				phone1 = aux;
+			}
+			
+			// @formatter:off
+			String streetAddress = e.select("div.bip-links").select("span[itemprop=streetAddress]").text().replace(';','-');
+			String postalCode = e.select("div.bip-links").select("span[itemprop=postalCode]").text();
+			String addressLocality = e.select("div.bip-links").select("span[itemprop=addressLocality]").text().replace(';','-');
+			String addressState = e.select("div.bip-links").select("span[class=addressState]").text().replace(';', '-');
+			// @formatter:on
+			
+
+			
+			StringBuilder sb = new StringBuilder();
+			sb.append(name).append(";").append(phone1).append(";").append(phone2).append(";").append(streetAddress)
+			.append(";").append(postalCode).append(";").append(addressLocality).append(";")
+			.append(addressState).append(";").append(webUrl)
+			.append(";");
+			
+			if (!webUrl.isEmpty()) {
+				sb.append(Extractor.Extract(webUrl));
+			}
+			
+			sb.append("\r\n");
+			
+			System.out.println(index + " de " + resultados + " -- " + sb.toString());
+
+		});
+		
+		System.out.println("Registros procesados .. " + index + " / " + resultados);
+	}
+
 
 	private static void getFarmaciasURL(URL url) throws Exception {
 
